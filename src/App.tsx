@@ -149,9 +149,13 @@ export default function App() {
         setShowAddSchool(false);
         setNewSchool({ name: "", npsn: "", kepalaSekolah: "", akreditasi: "A", guruCount: 25, muridCount: 350, address: "", lat: -1.24, lng: 116.8 });
         fetchData();
+      } else {
+        const errorText = await res.text().catch(() => "Unknown error");
+        showToast(`Gagal mendaftarkan sekolah: ${errorText || res.statusText}`, "error");
       }
     } catch (err) {
-      showToast("Gagal mendaftarkan sekolah.", "error");
+      console.error(err);
+      showToast("Gagal menghubungi server. Silakan coba lagi.", "error");
     }
   };
 
@@ -1086,54 +1090,81 @@ export default function App() {
 
                   {/* Add School Interactive Quick Modal block inside column */}
                   {showAddSchool && (
-                    <form onSubmit={handleAddSchool} className="p-3 bg-blue-50/50 rounded-lg border border-blue-200 text-xs mb-3 space-y-2">
-                      <div className="flex justify-between items-center pb-1">
-                        <span className="font-bold text-blue-800">Registrasi Sekolah Baru</span>
-                        <button type="button" onClick={() => setShowAddSchool(false)} className="text-slate-400 hover:text-slate-600">&times;</button>
+                    <form onSubmit={handleAddSchool} className="p-3.5 bg-blue-50 rounded-xl border border-blue-200 text-xs mb-4 space-y-3 shadow-sm">
+                      <div className="flex justify-between items-center pb-1 border-b border-blue-100 mb-1">
+                        <span className="font-bold text-blue-900 text-[13px]">Registrasi Sekolah Baru</span>
+                        <button type="button" onClick={() => setShowAddSchool(false)} className="text-slate-400 hover:text-slate-600 text-base font-bold">&times;</button>
                       </div>
-                      <input 
-                        type="text" placeholder="Nama Sekolah (cth: SMAN 5 Balikpapan)" required
-                        value={newSchool.name} onChange={(e) => setNewSchool({...newSchool, name: e.target.value})}
-                        className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs" 
-                      />
-                      <div className="grid grid-cols-2 gap-1.5">
+                      
+                      <div>
+                        <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">Nama Sekolah</label>
                         <input 
-                          type="text" placeholder="NPSN" required
-                          value={newSchool.npsn} onChange={(e) => setNewSchool({...newSchool, npsn: e.target.value})}
-                          className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs" 
-                        />
-                        <select 
-                          value={newSchool.akreditasi} onChange={(e) => setNewSchool({...newSchool, akreditasi: e.target.value})}
-                          className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs"
-                        >
-                          <option value="A">Akreditasi A</option>
-                          <option value="B">Akreditasi B</option>
-                          <option value="C">Akreditasi C</option>
-                        </select>
-                      </div>
-                      <input 
-                        type="text" placeholder="Nama Kepala Sekolah"
-                        value={newSchool.kepalaSekolah} onChange={(e) => setNewSchool({...newSchool, kepalaSekolah: e.target.value})}
-                        className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs" 
-                      />
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <input 
-                          type="number" placeholder="Jumlah Guru"
-                          value={newSchool.guruCount} onChange={(e) => setNewSchool({...newSchool, guruCount: Number(e.target.value)})}
-                          className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs" 
-                        />
-                        <input 
-                          type="number" placeholder="Jumlah Siswa"
-                          value={newSchool.muridCount} onChange={(e) => setNewSchool({...newSchool, muridCount: Number(e.target.value)})}
-                          className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs" 
+                          type="text" placeholder="Contoh: SMAN 5 Balikpapan" required
+                          value={newSchool.name} onChange={(e) => setNewSchool({...newSchool, name: e.target.value})}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
                         />
                       </div>
-                      <input 
-                        type="text" placeholder="Alamat Lengkap"
-                        value={newSchool.address} onChange={(e) => setNewSchool({...newSchool, address: e.target.value})}
-                        className="w-full p-1.5 border border-slate-200 rounded bg-white text-xs" 
-                      />
-                      <button type="submit" className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded">
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">NPSN (8 Digit)</label>
+                          <input 
+                            type="text" placeholder="Contoh: 30401889" required
+                            value={newSchool.npsn} onChange={(e) => setNewSchool({...newSchool, npsn: e.target.value})}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">Akreditasi</label>
+                          <select 
+                            value={newSchool.akreditasi} onChange={(e) => setNewSchool({...newSchool, akreditasi: e.target.value})}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-[34px]"
+                          >
+                            <option value="A">Akreditasi A</option>
+                            <option value="B">Akreditasi B</option>
+                            <option value="C">Akreditasi C</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">Nama Kepala Sekolah</label>
+                        <input 
+                          type="text" placeholder="Nama Lengkap Kepala Sekolah"
+                          value={newSchool.kepalaSekolah} onChange={(e) => setNewSchool({...newSchool, kepalaSekolah: e.target.value})}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">Jumlah Guru</label>
+                          <input 
+                            type="number" placeholder="Contoh: 25"
+                            value={newSchool.guruCount} onChange={(e) => setNewSchool({...newSchool, guruCount: Number(e.target.value)})}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">Jumlah Siswa</label>
+                          <input 
+                            type="number" placeholder="Contoh: 350"
+                            value={newSchool.muridCount} onChange={(e) => setNewSchool({...newSchool, muridCount: Number(e.target.value)})}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-blue-900 mb-1 uppercase tracking-wider">Alamat Lengkap Sekolah</label>
+                        <input 
+                          type="text" placeholder="Alamat Lengkap"
+                          value={newSchool.address} onChange={(e) => setNewSchool({...newSchool, address: e.target.value})}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" 
+                        />
+                      </div>
+
+                      <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs tracking-wide transition-colors shadow-sm">
                         Simpan Sekolah
                       </button>
                     </form>
