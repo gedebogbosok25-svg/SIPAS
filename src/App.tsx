@@ -445,6 +445,18 @@ export default function App() {
       id: `school-${Date.now()}`
     };
 
+    if (isLocalMode) {
+      const localSchools = getLocalData("sipas_schools", DEFAULT_SCHOOLS);
+      const updated = [...localSchools, createdSchool];
+      setLocalData("sipas_schools", updated);
+      setSchools(updated);
+      setShowAddSchool(false);
+      setNewSchool({ name: "", npsn: "", kepalaSekolah: "", akreditasi: "A", guruCount: 25, muridCount: 350, address: "", lat: -1.24, lng: 116.8 });
+      showToast("Sekolah binaan berhasil didaftarkan secara lokal.", "success");
+      fetchData();
+      return;
+    }
+
     try {
       const res = await fetch("/api/schools", {
         method: "POST",
@@ -475,6 +487,26 @@ export default function App() {
 
   const handleDeleteSchool = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus sekolah ini beserta seluruh histori supervisi?")) return;
+    if (isLocalMode) {
+      const localSchools = getLocalData("sipas_schools", DEFAULT_SCHOOLS).filter((s: any) => s.id !== id);
+      const localAcad = getLocalData("sipas_academic", DEFAULT_ACADEMIC).filter((s: any) => s.schoolId !== id);
+      const localMan = getLocalData("sipas_managerial", DEFAULT_MANAGERIAL).filter((s: any) => s.schoolId !== id);
+      const localProg = getLocalData("sipas_programs", DEFAULT_PROGRAMS).filter((s: any) => s.schoolId !== id);
+      const localFind = getLocalData("sipas_findings", DEFAULT_FINDINGS).filter((s: any) => s.schoolId !== id);
+      const localDoc = getLocalData("sipas_documents", DEFAULT_DOCUMENTS).filter((s: any) => s.schoolId !== id);
+
+      setLocalData("sipas_schools", localSchools);
+      setLocalData("sipas_academic", localAcad);
+      setLocalData("sipas_managerial", localMan);
+      setLocalData("sipas_programs", localProg);
+      setLocalData("sipas_findings", localFind);
+      setLocalData("sipas_documents", localDoc);
+
+      if (selectedSchoolId === id) setSelectedSchoolId(localSchools[0]?.id || "");
+      showToast("Sekolah & histori terasosiasi berhasil dihapus secara lokal.", "success");
+      fetchData();
+      return;
+    }
     try {
       const res = await fetch(`/api/schools/${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -520,6 +552,21 @@ export default function App() {
       averageScore: avg,
       status: saStatus
     };
+
+    if (isLocalMode) {
+      const localAcad = getLocalData("sipas_academic", DEFAULT_ACADEMIC);
+      const updated = [...localAcad, createdAcademic];
+      setLocalData("sipas_academic", updated);
+      setShowAddAcademic(false);
+      setNewAcademic({
+        schoolId: "school-1", teacherName: "", subject: "",
+        scores: { administrasi: 80, apersepsi: 80, penguasaanMateri: 80, metodePembelajaran: 80, evaluasi: 80, pemanfaatanTIK: 80 },
+        notes: "", recommendation: "", documentName: "RPP_Supervisi_Pembelajaran.pdf"
+      });
+      showToast("Supervisi akademik guru berhasil didokumentasikan secara lokal.", "success");
+      fetchData();
+      return;
+    }
 
     try {
       const res = await fetch("/api/supervisions/academic", {
@@ -567,6 +614,24 @@ export default function App() {
       date: new Date().toISOString().split('T')[0],
       averageScore: avg
     };
+
+    if (isLocalMode) {
+      const localMan = getLocalData("sipas_managerial", DEFAULT_MANAGERIAL);
+      const updated = [...localMan, createdManagerial];
+      setLocalData("sipas_managerial", updated);
+      setShowAddManagerial(false);
+      setNewManagerial({
+        schoolId: "school-1",
+        scores: {
+          standarIsi: 80, standarProses: 80, standarKelulusan: 80, standarPendidik: 80,
+          standarSarpras: 80, standarPengelolaan: 80, standarPembiayaan: 80, standarPenilaian: 80
+        },
+        notes: "", recommendation: "", implementationStatus: "Belum ditindaklanjuti"
+      });
+      showToast("Supervisi manajerial berhasil didokumentasikan secara lokal.", "success");
+      fetchData();
+      return;
+    }
 
     try {
       const res = await fetch("/api/supervisions/managerial", {
@@ -616,6 +681,17 @@ export default function App() {
       id: `pg-${Date.now()}`
     };
 
+    if (isLocalMode) {
+      const localProg = getLocalData("sipas_programs", DEFAULT_PROGRAMS);
+      const updated = [...localProg, createdProgram];
+      setLocalData("sipas_programs", updated);
+      setShowAddProgram(false);
+      setNewProgram({ schoolId: "school-1", title: "", target: "", dateScheduled: "", status: "Belum", notes: "-" });
+      showToast("Program bimbingan tahunan berhasil didaftarkan secara lokal.", "success");
+      fetchData();
+      return;
+    }
+
     try {
       const res = await fetch("/api/programs", {
         method: "POST",
@@ -650,6 +726,14 @@ export default function App() {
       "Selesai": "Belum"
     };
     const next = nextStatuses[currentStatus];
+    if (isLocalMode) {
+      const localProg = getLocalData("sipas_programs", DEFAULT_PROGRAMS);
+      const updated = localProg.map((p: any) => p.id === id ? { ...p, status: next } : p);
+      setLocalData("sipas_programs", updated);
+      showToast(`Status bimbingan diubah ke: ${next} secara lokal.`, "success");
+      fetchData();
+      return;
+    }
     try {
       const res = await fetch(`/api/programs/${id}`, {
         method: "PUT",
@@ -680,6 +764,17 @@ export default function App() {
       id: `fd-${Date.now()}`,
       dateAdded: new Date().toISOString().split('T')[0]
     };
+
+    if (isLocalMode) {
+      const localFind = getLocalData("sipas_findings", DEFAULT_FINDINGS);
+      const updated = [...localFind, createdFinding];
+      setLocalData("sipas_findings", updated);
+      setShowAddFinding(false);
+      setNewFinding({ schoolId: "school-1", problem: "", rootCause: "", recommendation: "", status: "Belum ditindaklanjuti", dateTarget: "" });
+      showToast("Temuan masalah berhasil didokumentasikan secara lokal.", "success");
+      fetchData();
+      return;
+    }
 
     try {
       const res = await fetch("/api/findings", {
@@ -715,6 +810,14 @@ export default function App() {
       "Selesai": "Belum ditindaklanjuti"
     };
     const next = nextStatuses[currentStatus];
+    if (isLocalMode) {
+      const localFind = getLocalData("sipas_findings", DEFAULT_FINDINGS);
+      const updated = localFind.map((f: any) => f.id === id ? { ...f, status: next } : f);
+      setLocalData("sipas_findings", updated);
+      showToast(`Status penyelesaian masalah diubah ke: ${next} secara lokal.`, "success");
+      fetchData();
+      return;
+    }
     try {
       const res = await fetch(`/api/findings/${id}`, {
         method: "PUT",
@@ -749,6 +852,16 @@ export default function App() {
       id: `doc-${Date.now()}`,
       dateUploaded: new Date().toISOString().split('T')[0]
     };
+
+    if (isLocalMode) {
+      const localDoc = getLocalData("sipas_documents", DEFAULT_DOCUMENTS);
+      const updated = [...localDoc, createdDoc];
+      setLocalData("sipas_documents", updated);
+      setNewDoc({ schoolId: "school-1", filename: "", category: "Kurikulum", size: "1.2 MB" });
+      showToast("Dokumen pendukung berhasil diarsipkan secara lokal.", "success");
+      fetchData();
+      return;
+    }
 
     try {
       const res = await fetch("/api/documents", {
