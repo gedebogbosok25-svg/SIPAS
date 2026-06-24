@@ -8,6 +8,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend 
 } from "recharts";
 import { School, AcademicSupervision, ManagerialSupervision, ProgramGuidance, Finding, DocumentInfo, SIPASStats } from "./types";
+// @ts-ignore
+import sipasLogo from "./assets/images/sipas_logo_1782324336112.jpg";
 
 export default function App() {
   // User Authentication State
@@ -89,7 +91,7 @@ export default function App() {
   const [aiGeneratedBy, setAiGeneratedBy] = useState<string>("");
 
   // Signature state
-  const [inspectorName, setInspectorName] = useState<string>("Drs. Hermawan, M.Pd");
+  const [inspectorName, setInspectorName] = useState<string>("Ekwanto, S.Pd., M.M.,");
   const [nipNumber, setNipNumber] = useState<string>("19741203 199903 1 002");
   const [isSigned, setIsSigned] = useState<boolean>(false);
 
@@ -451,12 +453,65 @@ export default function App() {
       else password = "kepsek123";
     }
 
+    const runOfflineFallback = () => {
+      const fallbackUsers = [
+        {
+          email: "pengawas@sipas.go.id",
+          password: "pengawas123",
+          name: "Ekwanto, S.Pd., M.M.,",
+          role: "pengawas"
+        },
+        {
+          email: "kepsek@sipas.go.id",
+          password: "kepsek123",
+          name: "Drs. H. Bambang Wijanarko, M.Pd.",
+          role: "kepsek"
+        },
+        {
+          email: "dinas@pendidikan.go.id",
+          password: "dinas123",
+          name: "Admin Dinas Pendidikan",
+          role: "dinas"
+        }
+      ];
+
+      const matched = fallbackUsers.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      );
+
+      if (matched) {
+        const authenticatedUser: { name: string; role: string; email: string; schoolId?: string } = {
+          name: matched.name,
+          role: matched.role,
+          email: matched.email,
+        };
+        
+        if (authenticatedUser.role === "kepsek") {
+          authenticatedUser.schoolId = loginSelectedSchool;
+          setSelectedSchoolId(loginSelectedSchool);
+        }
+
+        localStorage.setItem("sipas_user", JSON.stringify(authenticatedUser));
+        setUser(authenticatedUser);
+        showToast(`Selamat datang kembali (Mode Offline), ${authenticatedUser.name}!`, "success");
+      } else {
+        setLoginError("Email atau kata sandi tidak benar!");
+      }
+    };
+
     try {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
+
+      // If the API endpoint is not found (e.g. 404 on Vercel), fall back to offline verification
+      if (response.status === 404) {
+        console.warn("API login not found, falling back to offline verification.");
+        runOfflineFallback();
+        return;
+      }
 
       const result = await response.json();
 
@@ -477,8 +532,8 @@ export default function App() {
       setUser(authenticatedUser);
       showToast(`Selamat datang kembali, ${authenticatedUser.name}!`, "success");
     } catch (err) {
-      setLoginError("Terjadi kesalahan jaringan atau server.");
-      console.error("Login error:", err);
+      console.warn("Server unavailable, falling back to offline verification:", err);
+      runOfflineFallback();
     }
   };
 
@@ -501,12 +556,47 @@ export default function App() {
       password = "dinas123";
     }
 
+    const runOfflineDemoFallback = () => {
+      let demoUser: { name: string; role: string; email: string; schoolId?: string } = {
+        name: "Ekwanto, S.Pd., M.M.,",
+        role: "pengawas",
+        email: "pengawas@sipas.go.id",
+      };
+
+      if (role === "kepsek") {
+        const targetId = schoolId || (schools[0]?.id || "school-1");
+        const sch = schools.find(s => s.id === targetId) || schools[0];
+        demoUser = {
+          name: sch ? `Kepsek ${sch.name}` : "Kepala Sekolah Demo",
+          role: "kepsek",
+          email: "kepsek@sipas.go.id",
+          schoolId: targetId,
+        };
+        setSelectedSchoolId(targetId);
+      } else if (role === "dinas") {
+        demoUser = {
+          name: "Admin Dinas Pendidikan",
+          role: "dinas",
+          email: "dinas@pendidikan.go.id",
+        };
+      }
+
+      localStorage.setItem("sipas_user", JSON.stringify(demoUser));
+      setUser(demoUser);
+      showToast(`Login Demo Sukses (Mode Offline): ${demoUser.name}`, "success");
+    };
+
     try {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
+
+      if (response.status === 404) {
+        runOfflineDemoFallback();
+        return;
+      }
 
       const result = await response.json();
 
@@ -527,8 +617,8 @@ export default function App() {
       setUser(authenticatedUser);
       showToast(`Login Demo Sukses: ${authenticatedUser.name}`, "success");
     } catch (err) {
-      showToast("Gagal terhubung ke server untuk login demo.", "error");
-      console.error(err);
+      console.warn("Server unavailable for demo login, falling back to offline:", err);
+      runOfflineDemoFallback();
     }
   };
 
@@ -541,8 +631,13 @@ export default function App() {
 
         <div className="w-full max-w-md bg-slate-800/80 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-6 shadow-2xl relative z-10 text-white transition-all duration-300">
           <div className="text-center mb-6">
-            <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl mx-auto shadow-lg shadow-blue-500/30">
-              S
+            <div className="w-20 h-20 bg-white rounded-2xl p-1.5 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/10 overflow-hidden">
+              <img 
+                src={sipasLogo} 
+                alt="SIPAS Logo" 
+                className="w-full h-full object-contain rounded-xl"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white mt-4">SIPAS LOGIN</h1>
             <p className="text-xs text-slate-400 mt-1">Sistem Informasi Pengawasan & Pendampingan Akademik Sekolah</p>
@@ -556,60 +651,13 @@ export default function App() {
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Pilih Peran Pengguna (Role)</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLoginRole("pengawas")}
-                  className={`p-2.5 rounded-xl border text-center transition-all ${loginRole === "pengawas" ? "bg-blue-600/20 border-blue-500 text-blue-400" : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700/50"}`}
-                >
-                  <User size={16} className="mx-auto mb-1" />
-                  <span className="text-[10px] font-bold block">Pengawas</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLoginRole("kepsek")}
-                  className={`p-2.5 rounded-xl border text-center transition-all ${loginRole === "kepsek" ? "bg-blue-600/20 border-blue-500 text-blue-400" : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700/50"}`}
-                >
-                  <Building2 size={16} className="mx-auto mb-1" />
-                  <span className="text-[10px] font-bold block">Kepsek</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setLoginRole("dinas")}
-                  className={`p-2.5 rounded-xl border text-center transition-all ${loginRole === "dinas" ? "bg-blue-600/20 border-blue-500 text-blue-400" : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-700/50"}`}
-                >
-                  <FilePieChart size={16} className="mx-auto mb-1" />
-                  <span className="text-[10px] font-bold block">Dinas</span>
-                </button>
-              </div>
-            </div>
-
-            {loginRole === "kepsek" && schools.length > 0 && (
-              <div className="animate-fade-in">
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Pilih Sekolah Binaan</label>
-                <select
-                  value={loginSelectedSchool}
-                  onChange={(e) => setLoginSelectedSchool(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {schools.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} (NPSN: {s.npsn})</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Email / Username</label>
                 <input
                   type="email"
                   placeholder="name@example.com"
-                  value={loginEmail || (loginRole === "pengawas" ? "pengawas@sipas.go.id" : loginRole === "dinas" ? "dinas@pendidikan.go.id" : `kepsek@sekolah.sch.id`)}
+                  value={loginEmail || "pengawas@sipas.go.id"}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -620,7 +668,7 @@ export default function App() {
                 <input
                   type="password"
                   placeholder="••••••••"
-                  value={loginPassword || "password123"}
+                  value={loginPassword || "pengawas123"}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -634,46 +682,6 @@ export default function App() {
               Masuk ke Aplikasi
             </button>
           </form>
-
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-700"></div></div>
-            <div className="relative flex justify-center text-[10px] uppercase"><span className="bg-slate-800 px-2 text-slate-400 font-bold">Uji Coba Demo Instan</span></div>
-          </div>
-
-          <div className="space-y-2">
-            <button
-              onClick={() => loginWithDemo("pengawas")}
-              className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 rounded-lg text-xs text-left flex items-center justify-between text-slate-200 transition-all"
-            >
-              <div>
-                <span className="font-bold block text-blue-400">1. Pengawas Sekolah</span>
-                <span className="text-[10px] text-slate-400">Drs. Hermawan, M.Pd (Akses Penuh)</span>
-              </div>
-              <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded">Pilih</span>
-            </button>
-
-            <button
-              onClick={() => loginWithDemo("kepsek", schools[0]?.id)}
-              className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 rounded-lg text-xs text-left flex items-center justify-between text-slate-200 transition-all"
-            >
-              <div>
-                <span className="font-bold block text-emerald-400">2. Kepala Sekolah Binaan</span>
-                <span className="text-[10px] text-slate-400">{schools[0]?.name || "Sekolah Contoh"}</span>
-              </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">Pilih</span>
-            </button>
-
-            <button
-              onClick={() => loginWithDemo("dinas")}
-              className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 rounded-lg text-xs text-left flex items-center justify-between text-slate-200 transition-all"
-            >
-              <div>
-                <span className="font-bold block text-amber-400">3. Dinas Pendidikan</span>
-                <span className="text-[10px] text-slate-400">Oversight & Monitoring Kabupaten/Kota</span>
-              </div>
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">Pilih</span>
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -686,8 +694,13 @@ export default function App() {
       <aside className={`bg-slate-900 text-white flex flex-col shrink-0 ${isMobilePreview ? "w-16" : "w-64"}`}>
         <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2 bg-slate-950">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-base shadow-lg shadow-blue-500/20">
-              S
+            <div className="w-8 h-8 bg-white rounded-lg p-0.5 flex items-center justify-center shadow-md overflow-hidden">
+              <img 
+                src={sipasLogo} 
+                alt="SIPAS Logo" 
+                className="w-full h-full object-contain rounded"
+                referrerPolicy="no-referrer"
+              />
             </div>
             {!isMobilePreview && (
               <div>

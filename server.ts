@@ -222,7 +222,7 @@ const INITIAL_DB = {
     {
       email: "pengawas@sipas.go.id",
       password: "pengawas123",
-      name: "Drs. Hermawan, M.Pd",
+      name: "Ekwanto, S.Pd., M.M.,",
       role: "pengawas",
       nip: "19740523 200003 1 002"
     },

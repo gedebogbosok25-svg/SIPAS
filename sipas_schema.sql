@@ -143,7 +143,7 @@ INSERT INTO schools (id, name, npsn, kepala_sekolah, akreditasi, guru_count, mur
 
 -- Seed: Users
 INSERT INTO users (email, password, name, role, school_id, nip) VALUES
-('pengawas@sipas.go.id', 'pengawas123', 'Drs. Hermawan, M.Pd', 'pengawas', NULL, '19740523 200003 1 002'),
+('pengawas@sipas.go.id', 'pengawas123', 'Ekwanto, S.Pd., M.M.,', 'pengawas', NULL, '19740523 200003 1 002'),
 ('kepsek@sipas.go.id', 'kepsek123', 'Drs. H. Bambang Wijanarko, M.Pd.', 'kepsek', 'school-1', '19681112 199401 1 003'),
 ('dinas@pendidikan.go.id', 'dinas123', 'Admin Dinas Pendidikan', 'dinas', NULL, NULL);
 
