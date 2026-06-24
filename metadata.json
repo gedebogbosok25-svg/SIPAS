@@ -1,0 +1,6 @@
+{
+  "name": "SIPAS",
+  "description": "Sistem Informasi Pengawas Sekolah untuk supervisi, monitoring, evaluasi, pembinaan, dan pelaporan sekolah binaan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
