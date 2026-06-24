@@ -853,34 +853,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Quick Synchronize Indicator */}
-            <div className="flex items-center bg-slate-100 rounded-full px-2.5 py-1 gap-1.5 text-[10px] border border-slate-200">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
-              <span className="text-green-700 font-bold">TERKONEKSI</span>
-              <span className="text-slate-400 font-mono hidden sm:inline">Sync OK</span>
-            </div>
 
-            {/* Toggle mobile-view mockup size */}
-            <button 
-              onClick={() => setIsMobilePreview(!isMobilePreview)}
-              className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 transition-colors ${isMobilePreview ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-white hover:bg-slate-50 text-slate-600 border-slate-200"}`}
-              title="Simulasi Tampilan Handphone Lapangan"
-            >
-              <Smartphone size={13} />
-              <span className="hidden lg:inline text-[10px]">Preview HP</span>
-            </button>
-
-            {/* Refresh action */}
-            <button 
-              onClick={fetchData} 
-              disabled={isLoading}
-              className="p-1 px-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded text-slate-600 hover:text-blue-600 flex items-center gap-1 text-[11px] transition-colors"
-            >
-              <RefreshCw size={11} className={isLoading ? "animate-spin text-blue-600" : ""} />
-              <span className="hidden sm:inline">Segarkan</span>
-            </button>
-          </div>
         </header>
 
         {/* Global Toast Message */}
