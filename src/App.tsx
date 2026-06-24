@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { 
   Building2, BookOpen, ClipboardCheck, Calendar, AlertTriangle, FileText, 
   MapPin, Plus, Trash2, CheckCircle2, RefreshCw, Sparkles, Send, Download, 
-  Clock, CheckCircle, AlertCircle, Eye, FilePieChart, User, Filter, Smartphone, LogOut
+  Clock, CheckCircle, AlertCircle, Eye, FilePieChart, User, Filter, Smartphone, LogOut,
+  Menu, X
 } from "lucide-react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend 
@@ -32,6 +33,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("school-1");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isMobilePreview, setIsMobilePreview] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>({
     text: "Sistem SIPAS sinkronisasi sukses dengan Cloud.",
@@ -657,7 +659,7 @@ export default function App() {
                 <input
                   type="email"
                   placeholder="name@example.com"
-                  value={loginEmail || "pengawas@sipas.go.id"}
+                  value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -668,7 +670,7 @@ export default function App() {
                 <input
                   type="password"
                   placeholder="••••••••"
-                  value={loginPassword || "pengawas123"}
+                  value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -688,11 +690,22 @@ export default function App() {
   }
 
   return (
-    <div className={`flex h-screen w-full bg-slate-50 font-sans text-slate-900 overflow-hidden ${isMobilePreview ? "max-w-md mx-auto border-4 border-slate-700 shadow-2xl rounded-2xl my-2 max-h-[850px]" : ""}`}>
+    <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-900 overflow-hidden relative">
       
-      {/* Sidebar Navigation - Hidden or collapsed on mobile view to save space */}
-      <aside className={`bg-slate-900 text-white flex flex-col shrink-0 ${isMobilePreview ? "w-16" : "w-64"}`}>
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2 bg-slate-950">
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar Navigation - Responsive: Hidden as a slide-out drawer on mobile, static on desktop */}
+      <aside className={`bg-slate-900 text-white flex flex-col shrink-0 transition-all duration-300 ease-in-out z-50
+        fixed inset-y-0 left-0 w-64 md:relative md:translate-x-0 md:flex
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2 bg-slate-950 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white rounded-lg p-0.5 flex items-center justify-center shadow-md overflow-hidden">
               <img 
@@ -702,97 +715,104 @@ export default function App() {
                 referrerPolicy="no-referrer"
               />
             </div>
-            {!isMobilePreview && (
-              <div>
-                <h1 className="text-sm font-bold tracking-tight text-white leading-none">SIPAS</h1>
-                <p className="text-[10px] text-slate-400 mt-0.5">Sistem Pengawas</p>
-              </div>
-            )}
+            <div>
+              <h1 className="text-sm font-bold tracking-tight text-white leading-none">SIPAS</h1>
+              <p className="text-[10px] text-slate-400 mt-0.5">Sistem Pengawas</p>
+            </div>
           </div>
-          {!isMobilePreview && (
+          
+          <div className="flex items-center gap-1">
+            {/* Close button on mobile */}
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors md:hidden"
+              title="Tutup Menu"
+            >
+              <X size={16} />
+            </button>
             <span className="text-[10px] font-mono bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/50">v2.1</span>
-          )}
+          </div>
         </div>
-
+ 
         {/* Navigation Items */}
         <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
           <div className="text-[10px] font-semibold text-slate-500 uppercase px-3.5 py-1 tracking-wider">
-            {!isMobilePreview ? "Menu Utama" : "•"}
+            Menu Utama
           </div>
-
+ 
           <button 
-            onClick={() => setActiveTab("dashboard")}
+            onClick={() => { setActiveTab("dashboard"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "dashboard" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>📊</span>
-            {!isMobilePreview && <span>Dashboard Pengawas</span>}
+            <span>Dashboard Pengawas</span>
           </button>
-
+ 
           <button 
-            onClick={() => setActiveTab("sekolah")}
+            onClick={() => { setActiveTab("sekolah"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "sekolah" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>🏫</span>
-            {!isMobilePreview && <span className="flex-1 text-left">Sekolah Binaan</span>}
+            <span className="flex-1 text-left">Sekolah Binaan</span>
           </button>
-
+ 
           <div className="text-[10px] font-semibold text-slate-500 uppercase px-3.5 py-1 tracking-wider pt-2">
-            {!isMobilePreview ? "Pengawasan Lapangan" : "•"}
+            Pengawasan Lapangan
           </div>
-
+ 
           <button 
-            onClick={() => setActiveTab("akademik")}
+            onClick={() => { setActiveTab("akademik"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "akademik" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>📝</span>
-            {!isMobilePreview && <span>Supervisi Akademik</span>}
+            <span>Supervisi Akademik</span>
           </button>
-
+ 
           <button 
-            onClick={() => setActiveTab("manajerial")}
+            onClick={() => { setActiveTab("manajerial"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "manajerial" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>💼</span>
-            {!isMobilePreview && <span>Supervisi Manajerial</span>}
+            <span>Supervisi Manajerial</span>
           </button>
-
+ 
           <button 
-            onClick={() => setActiveTab("pembinaan")}
+            onClick={() => { setActiveTab("pembinaan"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "pembinaan" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>📅</span>
-            {!isMobilePreview && <span>Program Pembinaan</span>}
+            <span>Program Pembinaan</span>
           </button>
-
+ 
           <button 
-            onClick={() => setActiveTab("temuan")}
+            onClick={() => { setActiveTab("temuan"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "temuan" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>⚠️</span>
-            {!isMobilePreview && <span>Temuan & Tindak Lanjut</span>}
+            <span>Temuan & Tindak Lanjut</span>
           </button>
-
+ 
           <div className="text-[10px] font-semibold text-slate-500 uppercase px-3.5 py-1 tracking-wider pt-2">
-            {!isMobilePreview ? "Sistem & AI" : "•"}
+            Sistem & AI
           </div>
-
+ 
           <button 
-            onClick={() => setActiveTab("laporan")}
+            onClick={() => { setActiveTab("laporan"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "laporan" ? "bg-blue-600 text-white font-bold shadow-md" : "text-slate-300 hover:bg-slate-800"}`}
           >
             <span>📂</span>
-            {!isMobilePreview && <span>Laporan & Dokumen</span>}
+            <span>Laporan & Dokumen</span>
           </button>
-
+ 
           <button 
-            onClick={() => setActiveTab("ai_assistant")}
+            onClick={() => { setActiveTab("ai_assistant"); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 ${activeTab === "ai_assistant" ? "bg-purple-900 border border-purple-500/20 text-white font-bold" : "text-purple-300 hover:bg-slate-800"}`}
           >
             <span>✨</span>
-            {!isMobilePreview && <span className="text-cyan-400 font-bold">SIPAS AI Assistant</span>}
+            <span className="text-cyan-400 font-bold">SIPAS AI Assistant</span>
           </button>
         </nav>
-
+ 
         {/* User Info bottom */}
         <div className="p-3 bg-slate-950 border-t border-slate-800 shrink-0">
           <div className="flex items-center justify-between gap-1.5">
@@ -800,44 +820,35 @@ export default function App() {
               <div className="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs shrink-0 uppercase">
                 {user.role.substring(0, 2)}
               </div>
-              {!isMobilePreview && (
-                <div className="min-w-0">
-                  <p className="font-bold text-[11px] text-slate-200 truncate">{user.name}</p>
-                  <p className="text-[9px] text-slate-500 truncate capitalize">{user.role}</p>
-                </div>
-              )}
+              <div className="min-w-0">
+                <p className="font-bold text-[11px] text-slate-200 truncate">{user.name}</p>
+                <p className="text-[9px] text-slate-500 truncate capitalize">{user.role}</p>
+              </div>
             </div>
-            {!isMobilePreview && (
-              <button 
-                onClick={handleLogout}
-                className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors shrink-0"
-                title="Keluar"
-              >
-                <LogOut size={13} />
-              </button>
-            )}
-          </div>
-          {isMobilePreview && (
             <button 
               onClick={handleLogout}
-              className="w-full mt-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-bold rounded"
+              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors shrink-0"
               title="Keluar"
             >
-              Keluar
+              <LogOut size={13} />
             </button>
-          )}
+          </div>
         </div>
       </aside>
-
+ 
       {/* Main Container */}
       <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         
         {/* Top Header */}
         <header className="h-14 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-slate-100 rounded-md block md:hidden">
-              <span className="text-sm">☰</span>
-            </div>
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 hover:bg-slate-100 rounded-lg md:hidden text-slate-600 transition-colors flex items-center justify-center border border-slate-200"
+              title="Menu Utama"
+            >
+              <Menu size={18} />
+            </button>
             <div>
               <h2 className="text-sm font-bold text-slate-800 capitalize flex items-center gap-2">
                 {activeTab === "dashboard" && "📊 Dashboard & Agenda Pengawas"}
